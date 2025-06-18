@@ -4,11 +4,11 @@ from typing import List
 from transformers import AutoTokenizer, AutoModelForSeq2SeqLM, pipeline
 import torch
 
-logger = logging.getLogger("Seq2SeqSummarizer")
+logger = logging.getLogger("Seq2SeqSummarizerDeprecate")
 logging.basicConfig(level=logging.INFO)
 
 
-class Seq2SeqSummarizer:
+class Seq2SeqSummarizerDeprecate(BaseSummarizer):
     def __init__(
         self,
         model_name: str = "facebook/bart-large-cnn",

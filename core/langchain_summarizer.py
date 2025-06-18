@@ -7,7 +7,7 @@ import logging
 
 logger = logging.getLogger("LangchainSummarizer")
 
-class LangchainSummarizer:
+class LangchainSummarizer(BaseSummarizer):
     """
     LLM-based summarizer using LangChain's LLMChain and ChatPromptTemplate.
     Uses RecursiveCharacterTextSplitter to chunk documents.

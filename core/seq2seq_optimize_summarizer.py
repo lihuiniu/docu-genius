@@ -8,7 +8,7 @@ import torch
 logger = logging.getLogger("Seq2SeqSummarizer")
 logging.basicConfig(level=logging.INFO)
 
-class Seq2SeqSummarizer:
+class Seq2SeqSummarizer(BaseSummarizer):
     def __init__(
         self,
         model_name: str = "t5-small",
