@@ -1,0 +1,10 @@
+# Configuration for Seq2Seq Summarizer CLI
+
+model_name: "t5-base"          # HuggingFace model name, e.g. t5-small, facebook/bart-large-cnn
+use_gpu: false                 # Use GPU acceleration if available
+quantized: false               # Use quantized model for reduced memory (if supported)
+max_tokens: 512                # Max tokens per chunk for summarization
+threads: 4                    # Number of threads for parallel chunk summarization
+
+# How to use:
+# python cli/seq2seq_runner.py --input docs/input.txt --output docs/output_summaries.txt
