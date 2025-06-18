@@ -1,0 +1,7 @@
+# config/seq2seq_config.yaml
+model_name: t5-small
+use_gpu: false
+quantize: false
+max_tokens: 512
+
+# Usage example: python cli/seq2seq_runner.py input.txt --config config/seq2seq_config.yaml
