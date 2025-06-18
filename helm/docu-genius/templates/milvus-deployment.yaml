@@ -1,0 +1,39 @@
+{{- if .Values.milvus.enabled }}
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: milvus
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: milvus
+  template:
+    metadata:
+      labels:
+        app: milvus
+    spec:
+      containers:
+        - name: milvus
+          image: "{{ .Values.milvus.image }}"
+          ports:
+            - containerPort: {{ .Values.milvus.servicePort }}
+          resources:
+            limits:
+              cpu: {{ .Values.milvus.resources.limits.cpu }}
+              memory: {{ .Values.milvus.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.milvus.resources.requests.cpu }}
+              memory: {{ .Values.milvus.resources.requests.memory }}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus
+spec:
+  selector:
+    app: milvus
+  ports:
+    - port: {{ .Values.milvus.servicePort }}
+      targetPort: {{ .Values.milvus.servicePort }}
+{{- end }}

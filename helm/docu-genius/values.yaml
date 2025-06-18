@@ -1,0 +1,42 @@
+replicaCount: 2
+
+image:
+  repository: yourdockerhub/docu-genius
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+service:
+  type: ClusterIP
+  port: 8000
+
+resources:
+  limits:
+    cpu: 500m
+    memory: 512Mi
+  requests:
+    cpu: 250m
+    memory: 256Mi
+
+redis:
+  enabled: true
+  image: redis:8.0-alpine
+  servicePort: 6379
+  resources:
+    limits:
+      cpu: 200m
+      memory: 256Mi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+milvus:
+  enabled: true
+  image: milvusdb/milvus:v2.6.1
+  servicePort: 19530
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 2Gi
+    requests:
+      cpu: 500m
+      memory: 1Gi

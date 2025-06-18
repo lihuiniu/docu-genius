@@ -64,7 +64,10 @@ MILVUS_PORT=19530
 REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
-
+5. Deploy
+```bash
+helm install my-docu-genius ./docu-genius-chart
+```
 ---
 
 ## Usage
