@@ -20,6 +20,8 @@ from fastapi import BackgroundTasks, Query
 from llm_scrutiny import LLMScrutiny
 from index_namager import IndexManager
 from graph.reindex_graph import build_reindex_graph
+from utils.nlp_utils import extract_keywords
+import datetime
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -52,12 +54,31 @@ class SummaryRequest(BaseModel):
     doc_id: str
     storage: str = "local"
     path: str
+    backend: Optional[str] = "openai"
     acl: Optional[str] = "public"
     bm25: Optional[str] = ""
     use_cache: Optional[bool] = True
 
+def extract_keywords(text: str, max_keywords: int = 10) -> List[str]:
+    # Simple fallback keyword extractor: top-N frequent nouns/phrases
+    words = re.findall(r"\b[a-zA-Z]{4,}\b", text.lower())
+    freq = {}
+    for word in words:
+        freq[word] = freq.get(word, 0) + 1
+    sorted_keywords = sorted(freq, key=freq.get, reverse=True)
+    return sorted_keywords[:max_keywords]
+
 @app.post("/upload/{storage}")
-async def upload_file(storage: str, file: UploadFile = File(...), background_tasks: BackgroundTasks = None):
+async def upload_file(
+    storage: str,
+    file: UploadFile = File(...),
+    background_tasks: BackgroundTasks = None,
+    keyword_mode: str = Query("fallback", enum=["fallback", "llm"])
+):
+    """
+    POST /upload/s3?keyword_mode=llm
+POST /upload/s3?keyword_mode=fallback
+    """
     doc_id = str(uuid.uuid4())
     try:
         upload_tracker.start_upload(doc_id)
@@ -111,11 +132,23 @@ async def process_uploaded_doc(doc_id: str, storage: str):
             tmp.write(content)
             tmp.flush()
             tmp_path = tmp.name
-
+        # summarizer = get_summarizer(backend)
         chunks = summarizer.summarize_file(tmp_path)
         summaries = [c["summary"] for c in chunks]
         embeddings = [c["embedding"] for c in chunks]
-        metadata = [{"source_doc": doc_id, "acl": "public"} for _ in summaries]
+        # metadata = [{"source_doc": doc_id, "acl": "public"} for _ in summaries]
+        #keywords = extract_keywords(content)
+        keywords = extract_keywords(content, mode=keyword_mode,
+                                    client=summarizer.client if hasattr(summarizer, "client") else None)
+
+        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(req.path))
+        metadata = [{
+            "source_doc": req.doc_id,
+            "acl": req.acl,
+            "bm25": req.bm25,
+            "keywords": ", ".join(keywords),
+            "last_modified": last_modified.isoformat()
+        } for _ in summaries]
 
         milvus_store.insert(embeddings, summaries, metadata)
         redis_cache.cache_chunks(doc_id, chunks)
@@ -161,12 +194,20 @@ def summarize_document(req: SummaryRequest):
             tmp.write(content)
             tmp.flush()
             tmp_path = tmp.name
-
+        # summarizer = get_summarizer(backend)
         chunks = summarizer.summarize_file(tmp_path)
         summaries = [c["summary"] for c in chunks]
         embeddings = [c["embedding"] for c in chunks]
-        metadata = [{"source_doc": req.doc_id, "acl": req.acl, "bm25": req.bm25} for _ in summaries]
-
+        #metadata = [{"source_doc": req.doc_id, "acl": req.acl, "bm25": req.bm25} for _ in summaries]
+        keywords = extract_keywords(content)
+        last_modified = datetime.datetime.fromtimestamp(os.path.getmtime(req.path))
+        metadata = [{
+            "source_doc": req.doc_id,
+            "acl": req.acl,
+            "bm25": req.bm25,
+            "keywords": ", ".join(keywords),
+            "last_modified": last_modified.isoformat()
+        } for _ in summaries]
         milvus_store.insert(embeddings, summaries, metadata)
         redis_cache.cache_chunks(req.doc_id, chunks)
 

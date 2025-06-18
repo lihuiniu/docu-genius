@@ -14,3 +14,13 @@ def SummarizerFactory(engine: str, model: str, api_key: str = None) -> BaseSumma
         return Seq2SeqSummarizer(model_name_or_path=model)
     else:
         raise ValueError(f"Unsupported engine: {engine}")
+
+def get_summarizer(backend: str) -> BaseSummarizer:
+    if backend == "openai":
+        return OpenAISummarizer()
+    elif backend == "seq2seq":
+        return Seq2SeqSummarizer()
+    elif backend == "langchain":
+        return LangchainSummarizer()
+    else:
+        raise ValueError(f"Unsupported summarizer backend: {backend}")
