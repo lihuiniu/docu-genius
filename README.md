@@ -1,9 +1,11 @@
+
 # docu-genius
+
 An AI-powered document system built with FastAPI, LangChain, and Milvus. Supports semantic search, metadata-rich chunking, and OpenAI-based summarization to enable fast, natural-language document querying and insight generation.
 
-# This project provides an asynchronous document chunking, summarization, evaluation, and reindexing pipeline integrated with vector search (Milvus 2.6), Redis 8.0 cache, and LangChain/OpenAI (1.x) for embedding and LLM-based evaluation.
+This project provides an asynchronous document chunking, summarization, evaluation, and reindexing pipeline integrated with vector search (Milvus 2.6), Redis 8.0 cache, and LangChain/OpenAI (1.x) for embedding and LLM-based evaluation.
 
-# The pipeline supports:
+## The pipeline supports:
 
 - Uploading documents to various storage backends (local, S3, Azure Blob, Delta Lake)
 - Chunking documents with flexible strategies
@@ -19,13 +21,13 @@ An AI-powered document system built with FastAPI, LangChain, and Milvus. Support
 
 ## Features
 
-- **Flexible storage**: Local filesystem, AWS S3, Azure Blob Storage, and Delta Lake support
-- **Vector search**: Milvus 2.6 client integration for fast semantic search
-- **Cache**: Redis 8.0 for chunk caching and fast keyword search
-- **LLM evaluation**: OpenAI 1.x + LangChain LLMChain for summary quality scoring
-- **Workflow orchestration**: LangGraph-based state graph for multi-step, conditional reindex pipelines
-- **Async & scalable**: FastAPI backend with async processing and Hypercorn server
-- **CLI utility**: Batch reindex documents easily from the command line
+- **Flexible storage**: Local filesystem, AWS S3, Azure Blob Storage, and Delta Lake support  
+- **Vector search**: Milvus 2.6 client integration for fast semantic search  
+- **Cache**: Redis 8.0 for chunk caching and fast keyword search  
+- **LLM evaluation**: OpenAI 1.x + LangChain LLMChain for summary quality scoring  
+- **Workflow orchestration**: LangGraph-based state graph for multi-step, conditional reindex pipelines  
+- **Async & scalable**: FastAPI backend with async processing and Hypercorn server  
+- **CLI utility**: Batch reindex documents easily from the command line  
 
 ---
 
@@ -36,25 +38,24 @@ An AI-powered document system built with FastAPI, LangChain, and Milvus. Support
 ```bash
 git clone https://github.com/lihuiniu/docu-genius.git
 cd docu-genius
-```bash
+```
 
-Create and activate a Python virtual environment (recommended):
+2. Create and activate a Python virtual environment (recommended):
 
 ```bash
 python3 -m venv venv
 source venv/bin/activate
-```bash
+```
 
-Install dependencies:
+3. Install dependencies:
 
 ```bash
 pip install -r requirements.txt
-```bash
-
-Setup environment variables (example .env file):
-
-ini
 ```
+
+4. Setup environment variables (example `.env` file):
+
+```ini
 OPENAI_API_KEY=your_openai_api_key
 AWS_ACCESS_KEY_ID=your_aws_key
 AWS_SECRET_ACCESS_KEY=your_aws_secret
@@ -64,43 +65,53 @@ REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
 
+---
+
 ## Usage
 
 ### Running the API server
-Use Hypercorn to run FastAPI app:
 
-```
+Use Hypercorn to run the FastAPI app:
+
+```bash
 hypercorn api.main:app --reload --bind 0.0.0.0:8000
 ```
 
 ### Upload a document
-```
+
+```bash
 curl -F "file=@./example.txt" http://localhost:8000/upload/local
 ```
 
 ### Check upload status
-```
+
+```bash
 curl http://localhost:8000/upload/status/{doc_id}
 ```
 
 ### Summarize a document
-```
-curl -X POST http://localhost:8000/summarize -H "Content-Type: application/json" -d '{"doc_id": "your_doc_id", "storage": "local", "path": "./uploads/your_doc_id.txt"}'
+
+```bash
+curl -X POST http://localhost:8000/summarize   -H "Content-Type: application/json"   -d '{"doc_id": "your_doc_id", "storage": "local", "path": "./uploads/your_doc_id.txt"}'
 ```
 
 ### Query similar chunks
-```
-curl -X POST http://localhost:8000/query -H "Content-Type: application/json" -d '{"keyword": "example", "top_k": 5}'
+
+```bash
+curl -X POST http://localhost:8000/query   -H "Content-Type: application/json"   -d '{"keyword": "example", "top_k": 5}'
 ```
 
 ### Batch reindex via CLI
-```
+
+```bash
 python cli/reindex.py --doc-ids doc_id1 doc_id2 --storage local --concurrency 4
 ```
 
-# Architecture Diagram
-mermaid
-```
+---
+
+## Architecture Diagram
+
+```mermaid
 graph TD
     A[Upload Document] --> B[Storage (S3/Azure/Local/Delta)]
     B --> C[Chunking & Summarization]
@@ -115,33 +126,35 @@ graph TD
     I --> F
     CLI[CLI Batch Reindex] --> I
     User --> API[FastAPI + Hypercorn Server] --> I
-	```
+```
 
-# Testing & CI
-Unit and async integration tests use pytest and pytest-asyncio
+---
 
-GitHub Actions configured to run tests on push and PRs (.github/workflows/ci.yml)
+## Testing & CI
 
-Test coverage reports and linting checks included
+- Unit and async integration tests use `pytest` and `pytest-asyncio`
+- GitHub Actions configured to run tests on push and PRs (`.github/workflows/ci.yml`)
+- Test coverage reports and linting checks included
 
 Run tests locally:
 
-```
+```bash
 pytest tests/
 ```
 
-### Notes
-Ensure Milvus 2.6 server and Redis 8.0 are running and accessible
+---
 
-OpenAI API key must be valid for embeddings and LLM calls
+## Notes
 
-LangGraph workflows allow easy extension of states and conditional logic
+- Ensure Milvus 2.6 server and Redis 8.0 are running and accessible
+- OpenAI API key must be valid for embeddings and LLM calls
+- LangGraph workflows allow easy extension of states and conditional logic
+- For large documents, consider tuning chunk size and concurrency limits
+- Redis caching improves query speed for frequent lookups
+- CLI utility supports parallel batch reindexing with resumable state
 
-For large documents, consider tuning chunk size and concurrency limits
+---
 
-Redis caching improves query speed for frequent lookups
+## License
 
-CLI utility supports parallel batch reindexing with resumable state
-
-# License
 MIT License © 2025 Hui Li
