@@ -1,0 +1,29 @@
+# Optional Docker Compose (infra/docker-compose.yml)
+version: '3.8'
+services:
+  docu-genius:
+    image: yourdockerhub/docu-genius:latest
+    ports:
+      - "8000:8000"
+    environment:
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      MILVUS_HOST: milvus
+      MILVUS_PORT: 19530
+    command: ["hypercorn", "api.main:app", "--bind", "0.0.0.0:8000", "--workers", "4"]
+
+  redis:
+    image: redis:8.0-alpine
+    ports:
+      - "6379:6379"
+
+  milvus:
+    image: milvusdb/milvus:v2.6.1
+    ports:
+      - "19530:19530"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    cap_add:
+      - IPC_LOCK

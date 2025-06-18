@@ -1,0 +1,12 @@
+{{- if .Values.milvus.enabled }}
+apiVersion: v1
+kind: Service
+metadata:
+  name: milvus
+spec:
+  selector:
+    app: milvus
+  ports:
+    - port: {{ .Values.milvus.servicePort }}
+      targetPort: {{ .Values.milvus.servicePort }}
+{{- end }}

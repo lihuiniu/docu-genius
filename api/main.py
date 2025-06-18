@@ -221,3 +221,7 @@ async def reindex_document_endpoint(
     if full_reindex:
     background_tasks.add_task(index_manager.reindex_document, doc_id, full_reindex)
     return {"doc_id": doc_id, "status": "reindexing_started", "full_reindex": full_reindex}
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok"}
