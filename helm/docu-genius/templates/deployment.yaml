@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ include "docu-genius.fullname" . }}
+  labels:
+    app: {{ include "docu-genius.name" . }}
+spec:
+  replicas: {{ .Values.replicaCount }}
+  selector:
+    matchLabels:
+      app: {{ include "docu-genius.name" . }}
+  template:
+    metadata:
+      labels:
+        app: {{ include "docu-genius.name" . }}
+    spec:
+      containers:
+        - name: docu-genius
+          image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+          imagePullPolicy: {{ .Values.image.pullPolicy }}
+          ports:
+            - containerPort: {{ .Values.service.port }}
+          resources:
+            limits:
+              cpu: {{ .Values.resources.limits.cpu }}
+              memory: {{ .Values.resources.limits.memory }}
+            requests:
+              cpu: {{ .Values.resources.requests.cpu }}
+              memory: {{ .Values.resources.requests.memory }}
+          env:
+            - name: REDIS_HOST
+              value: redis
+            - name: REDIS_PORT
+              value: "{{ .Values.redis.servicePort }}"
+            - name: MILVUS_HOST
+              value: milvus
+            - name: MILVUS_PORT
+              value: "{{ .Values.milvus.servicePort }}"
+          command: ["hypercorn"]
+          args:
+            - "api.main:app"
+            - "--bind"
+            - "0.0.0.0:{{ .Values.service.port }}"
+            - "--workers"
+            - "4"
