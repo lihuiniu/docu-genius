@@ -1,5 +1,5 @@
-# Optional Docker Compose (infra/docker-compose.yml)
 version: '3.8'
+
 services:
   docu-genius:
     image: yourdockerhub/docu-genius:latest
@@ -10,7 +10,18 @@ services:
       REDIS_PORT: 6379
       MILVUS_HOST: milvus
       MILVUS_PORT: 19530
+      PG_HOST: postgres
+      PG_PORT: 5432
+      PG_USER: rag
+      PG_PASSWORD: ragpw
+      PG_DB: metadata
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://laminar:4318
     command: ["hypercorn", "api.main:app", "--bind", "0.0.0.0:8000", "--workers", "4"]
+    depends_on:
+      - redis
+      - milvus
+      - postgres
+      - laminar
 
   redis:
     image: redis:8.0-alpine
@@ -27,3 +38,34 @@ services:
         hard: -1
     cap_add:
       - IPC_LOCK
+
+  postgres:
+    image: postgres:14
+    restart: always
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: ragpw
+      POSTGRES_DB: metadata
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./infra/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+
+  laminar:
+    image: laminarhq/laminar:latest
+    ports:
+      - "4318:4318"    # OTLP HTTP endpoint
+      - "16686:16686"  # Laminar dashboard (similar to Jaeger)
+    environment:
+      - LAMINAR_MODE=all-in-one
+
+  phoenix:
+    image: arizephoenix/phoenix:latest
+    ports:
+      - "6006:6006"
+    environment:
+      - PHOENIX_PORT=6006
+
+volumes:
+  pgdata:

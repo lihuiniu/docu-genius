@@ -22,6 +22,8 @@ from index_namager import IndexManager
 from graph.reindex_graph import build_reindex_graph
 from utils.nlp_utils import extract_keywords
 import datetime
+from eval.evaluator import PhoenixEvaluator
+
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
@@ -265,3 +267,11 @@ def health_check():
 @app.get("/readyz")
 def readiness_probe():
     return {"status": "ok"}
+
+@app.post("/eval")
+def eval_chunks(doc_id: str):
+    """
+    Evaluation + Drift Monitoring (Phoenix)
+    """
+    chunks = redis_cache.get_chunks(doc_id)
+    PhoenixEvaluator.log_eval(chunks)

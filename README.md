@@ -1,4 +1,3 @@
-
 # docu-genius
 
 An AI-powered document system built with FastAPI, LangChain, and Milvus. Supports semantic search, metadata-rich chunking, and OpenAI-based summarization to enable fast, natural-language document querying and insight generation.
@@ -64,17 +63,18 @@ MILVUS_PORT=19530
 REDIS_HOST=localhost
 REDIS_PORT=6379
 ```
-5. Deploy
+
+5. Deploy using Helm:
+
 ```bash
 helm install my-docu-genius ./docu-genius-chart
 ```
+
 ---
 
 ## Usage
 
 ### Running the API server
-
-Use Hypercorn to run the FastAPI app:
 
 ```bash
 hypercorn api.main:app --reload --bind 0.0.0.0:8000
@@ -95,13 +95,17 @@ curl http://localhost:8000/upload/status/{doc_id}
 ### Summarize a document
 
 ```bash
-curl -X POST http://localhost:8000/summarize   -H "Content-Type: application/json"   -d '{"doc_id": "your_doc_id", "storage": "local", "path": "./uploads/your_doc_id.txt"}'
+curl -X POST http://localhost:8000/summarize \
+  -H "Content-Type: application/json" \
+  -d '{"doc_id": "your_doc_id", "storage": "local", "path": "./uploads/your_doc_id.txt"}'
 ```
 
 ### Query similar chunks
 
 ```bash
-curl -X POST http://localhost:8000/query   -H "Content-Type: application/json"   -d '{"keyword": "example", "top_k": 5}'
+curl -X POST http://localhost:8000/query \
+  -H "Content-Type: application/json" \
+  -d '{"keyword": "example", "top_k": 5}'
 ```
 
 ### Batch reindex via CLI
