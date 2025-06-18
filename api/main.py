@@ -10,7 +10,7 @@ import tempfile
 import asyncio
 from starlette.concurrency import run_in_threadpool
 
-from core.summarizer import OpenAISummarizer
+from core.summarizer_factory import SummarizerFactory  # ✅ Switched to factory
 from vector_store.milvus_client import MilvusVectorStore
 from vector_store.redis_cache import RedisVectorCache
 from utils.file_io import save_to_s3, read_from_s3, save_to_azure, read_from_azure, load_from_deltalake
@@ -18,26 +18,25 @@ from utils.upload_tracker import UploadTracker
 from fastapi import BackgroundTasks, Query
 
 from llm_scrutiny import LLMScrutiny
-from index_namager import IndexingManager
+from index_namager import IndexManager
 from graph.reindex_graph import build_reindex_graph
-
-graph_app = build_reindex_graph()
-
-result = await graph_app.invoke({
-    "doc_id": doc_id,
-    "content": document_text,
-    "chunks": chunked_text,
-})
 
 app = FastAPI()
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger("API")
 
+# Global config via ENV or fallback
+DEFAULT_ENGINE = os.getenv("SUMMARIZER_ENGINE", "openai")
+DEFAULT_MODEL = os.getenv("SUMMARIZER_MODEL", "gpt-4")
+DEFAULT_API_KEY = os.getenv("OPENAI_API_KEY", "")
+
 # Initialize clients
-summarizer = OpenAISummarizer()
+summarizer = SummarizerFactory(DEFAULT_ENGINE, DEFAULT_MODEL, DEFAULT_API_KEY)
 milvus_store = MilvusVectorStore()
 redis_cache = RedisVectorCache()
 upload_tracker = UploadTracker()
+
+graph_app = build_reindex_graph()
 
 class QueryRequest(BaseModel):
     embedding: Optional[List[float]] = None
@@ -51,7 +50,7 @@ class QueryRequest(BaseModel):
 
 class SummaryRequest(BaseModel):
     doc_id: str
-    storage: str = "local"  # local | s3 | azure | delta
+    storage: str = "local"
     path: str
     acl: Optional[str] = "public"
     bm25: Optional[str] = ""
@@ -81,7 +80,6 @@ async def upload_file(storage: str, file: UploadFile = File(...), background_tas
                 upload_tracker.fail_upload(doc_id)
 
         background_tasks.add_task(save_and_process)
-
         return JSONResponse({"doc_id": doc_id, "status": "uploading"})
     except Exception as e:
         logger.error(f"Upload trigger failed: {e}")
@@ -105,7 +103,7 @@ async def process_uploaded_doc(doc_id: str, storage: str):
             with open(path, "r", encoding="utf-8") as f:
                 content = f.read()
 
-        if not document_passes_scrutiny(content):
+        if not await document_passes_scrutiny(content):
             logger.warning(f"Document {doc_id} failed scrutiny")
             return
 
@@ -128,19 +126,17 @@ async def process_uploaded_doc(doc_id: str, storage: str):
 
 async def document_passes_scrutiny(content: str) -> bool:
     if len(content) < 100:
-        return False  # too short to verify
+        return False
 
     llm_scrutiny = LLMScrutiny()
-
     try:
-        flagged = await llm_scrutiny.run_checks(content[:2000])  # chunk first 2k chars
+        flagged = await llm_scrutiny.run_checks(content[:2000])
         if flagged:
             logger.warning("Document flagged as inappropriate")
         return not flagged
     except Exception as e:
         logger.warning(f"Scrutiny check error: {e}, defaulting to pass")
         return True
-
 
 @app.post("/summarize")
 def summarize_document(req: SummaryRequest):
@@ -192,7 +188,6 @@ def query_similar_chunks(query: QueryRequest):
                                                      keyword=query.keyword, min_time=query.min_time, max_time=query.max_time))
 
         if query.top_p:
-            # Optionally sample top_p proportion of results if provided
             limit = int(len(results) * query.top_p)
             results = results[:max(limit, 1)]
 
@@ -219,7 +214,7 @@ async def reindex_document_endpoint(
 ):
     index_manager = IndexManager(milvus_store, redis_cache, storage)
     if full_reindex:
-    background_tasks.add_task(index_manager.reindex_document, doc_id, full_reindex)
+        background_tasks.add_task(index_manager.reindex_document, doc_id, full_reindex)
     return {"doc_id": doc_id, "status": "reindexing_started", "full_reindex": full_reindex}
 
 @app.get("/health")

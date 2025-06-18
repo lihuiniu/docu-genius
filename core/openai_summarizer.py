@@ -26,7 +26,7 @@ import time
 logger = logging.getLogger("OpenAISummarizer")
 logging.basicConfig(level=logging.INFO)
 
-class OpenAISummarizer:
+class OpenAISummarizer(BaseSummarizer):
     """
      Step 1 complete: Created OpenAISummarizer with multi-threaded chunking
      and token-aware summarization using OpenAI v1 SDK.
