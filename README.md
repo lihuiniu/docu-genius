@@ -113,19 +113,19 @@ python cli/reindex.py --doc-ids doc_id1 doc_id2 --storage local --concurrency 4
 
 ```mermaid
 graph TD
-    A[Upload Document] --> B[Storage (S3/Azure/Local/Delta)]
-    B --> C[Chunking & Summarization]
-    C --> D[LangChain LLMChain Evaluation]
-    D -->|Low Quality| E[Resummarization]
-    D -->|Good Quality| F[Indexing]
-    F --> G[Milvus 2.6 Vector Store]
-    F --> H[Redis 8.0 Cache]
-    I[LangGraph Workflow] --> C
+    A["Upload Document"] --> B["Storage (S3 / Azure / Local / Delta)"]
+    B --> C["Chunking & Summarization"]
+    C --> D["LangChain LLMChain Evaluation"]
+    D -->|Low Quality| E["Resummarization"]
+    D -->|Good Quality| F["Indexing"]
+    F --> G["Milvus 2.6 Vector Store"]
+    F --> H["Redis 8.0 Cache"]
+    I["LangGraph Workflow"] --> C
     I --> D
     I --> E
     I --> F
-    CLI[CLI Batch Reindex] --> I
-    User --> API[FastAPI + Hypercorn Server] --> I
+    CLI["CLI Batch Reindex"] --> I
+    User --> API["FastAPI + Hypercorn Server"] --> I
 ```
 
 ---
