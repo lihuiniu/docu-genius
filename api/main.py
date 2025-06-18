@@ -225,3 +225,7 @@ async def reindex_document_endpoint(
 @app.get("/health")
 def health_check():
     return {"status": "ok"}
+
+@app.get("/readyz")
+def readiness_probe():
+    return {"status": "ok"}
