@@ -1,0 +1,45 @@
+name: Helm Deploy
+
+on:
+  push:
+    branches: [main, staging]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Kubeconfig
+        run: |
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" | base64 -d > ~/.kube/config
+
+      - name: Install Helm
+        uses: azure/setup-helm@v3
+
+      - name: Set Environment
+        id: env
+        run: |
+          if [[ "${GITHUB_REF##*/}" == "staging" ]]; then
+            echo "env_name=staging" >> $GITHUB_OUTPUT
+            echo "values_file=helm/values-staging.yaml" >> $GITHUB_OUTPUT
+          else
+            echo "env_name=production" >> $GITHUB_OUTPUT
+            echo "values_file=helm/values.yaml" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Helm Upgrade or Install
+        run: |
+          set -e
+          helm upgrade --install docu-genius ./helm \
+            --namespace default \
+            --create-namespace \
+            --values ${{ steps.env.outputs.values_file }} \
+            --atomic \
+            --timeout 5m
+
+      - name: Rollback on Failure
+        if: failure()
+        run: |
+          helm rollback docu-genius || echo "No previous release to roll back to"

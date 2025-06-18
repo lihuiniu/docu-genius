@@ -25,15 +25,4 @@ spec:
             requests:
               cpu: {{ .Values.milvus.resources.requests.cpu }}
               memory: {{ .Values.milvus.resources.requests.memory }}
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: milvus
-spec:
-  selector:
-    app: milvus
-  ports:
-    - port: {{ .Values.milvus.servicePort }}
-      targetPort: {{ .Values.milvus.servicePort }}
 {{- end }}

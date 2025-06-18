@@ -3,7 +3,7 @@ hypercorn==0.14.3
 pydantic==1.10.7
 python-multipart==0.0.6
 redis==8.0.0
-pymilvus==2.6.0
+pymilvus==2.6.1
 boto3==1.28.22
 langchain==0.0.250
 tiktoken==0.4.0

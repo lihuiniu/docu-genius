@@ -1,0 +1,28 @@
+replicaCount: 1
+
+image:
+  repository: yourdockerhub/docu-genius
+  tag: "staging"
+  pullPolicy: Always
+
+service:
+  type: ClusterIP
+  port: 8000
+
+resources:
+  limits:
+    cpu: 300m
+    memory: 256Mi
+  requests:
+    cpu: 150m
+    memory: 128Mi
+
+redis:
+  enabled: true
+  image: redis:8.0-alpine
+  servicePort: 6379
+
+milvus:
+  enabled: true
+  image: milvusdb/milvus:v2.6.1
+  servicePort: 19530
