@@ -1,0 +1,10 @@
+name: mcp-rag-chatbot
+description: Chatbot with GPT, Milvus-based RAG, and Git PR tooling via MCP
+
+tools:
+  - tools.git_tool.GitTool
+  - tools.incident_tool.IncidentTool
+
+prompts:
+  base_prompt: prompts/base_prompt.txt
+  incident_prompt: prompts/incident_prompt.txt
