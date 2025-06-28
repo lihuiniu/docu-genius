@@ -1,0 +1,1 @@
+User asked about an incident: {incident_id}. Look it up and summarize.
